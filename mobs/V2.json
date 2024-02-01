@@ -1,0 +1,50 @@
+{
+  "Sensor1": {
+    "imgPath": "images/level1/czujka1.png",
+    "tacticRound1": 2,
+    "tacticRest": 2,
+    "repeatAttack": true,
+    "restingTime": 5,
+    "saveSS" : false
+  },
+  "Sensor2": {
+    "imgPath": "images/level2/czujka2.png",
+    "tacticRound1": 2,
+    "tacticRest": 2,
+    "repeatAttack": true,
+    "restingTime": 0,
+    "saveSS" : false
+  },
+  "Sensor3": {
+    "imgPath": "images/level3/czujka3.png",
+    "tacticRound1": 2,
+    "tacticRest": 2,
+    "repeatAttack": true,
+    "restingTime": 8,
+    "saveSS" : false
+  },
+  "Boss1": {
+    "imgPath": "images/level2/boss1.png",
+    "tacticRound1": 1,
+    "tacticRest": 4,
+    "repeatAttack": false,
+    "restingTime": 0,
+    "saveSS" : false
+  },
+  "Boss2": {
+    "imgPath": "images/level3/boss2.png",
+    "tacticRound1": 1,
+    "tacticRest": 4,
+    "repeatAttack": false,
+    "restingTime": 15,
+    "saveSS" : false
+  },
+  "V2": {
+    "imgPath": "images/level4/boss3.png",
+    "tacticRound1": 1,
+    "tacticRest": 3,
+    "repeatAttack": false,
+    "restingTime": 0,
+    "saveSS" : true
+  }
+}
