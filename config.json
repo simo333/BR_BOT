@@ -1,9 +1,9 @@
 {
-  "repeats" : 20,
+  "repeats" : 25,
   "tacticSource" : "mobs/V2.json",
   "hotkeys": {
     "startStop": "shift+alt+r",
     "pause": "shift+alt+p"
   },
-  "selectTacticVia" : "keyboard"
+  "takeActionVia": "keyboard"
 }

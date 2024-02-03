@@ -19,6 +19,5 @@ combat = Combat(mobData, config)
 for i in range(config['repeats']):
     combat.killMob('FireMob')
     if i % 4 == 0:
-        controller.leftClick('images/fight/restIcon.png')
-        pyautogui.sleep(10)
+        combat.rest(8)
 
