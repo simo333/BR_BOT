@@ -1,11 +1,10 @@
-import userinput
-
 import json
 
 import pyautogui
 
 from userinput import UserInputController
 from userinput.Combat import Combat, finishing_combat
+from userinput.UserInputController import MouseActions
 
 with open('config.json', 'r') as file:
     config = json.load(file)
@@ -18,61 +17,52 @@ combat = Combat(mobData, config)
 
 
 def enterEasyV2():
-    controller.rightClick('images/level0/entranceToInstance.png', movementDuration=0.3)
-    if not controller.wait_for_image('images/level0/easyV2Option.png', 3, 1):
+    controller.mouseAction(MouseActions.RIGHT, 'images/level0/entranceToInstance.png', movementDuration=0.3)
+    if not controller.wait_for_image('images/level0/easyV2Option.png', 1, 3):
         pyautogui.moveTo(300, 300)
         enterEasyV2()
-    controller.leftMouseDown('images/level0/easyV2Option.png')
+    controller.mouseAction(MouseActions.HOLD_DOWN, 'images/level0/easyV2Option.png')
 
 
 def enterSecondLevel():
-    controller.rightClick('images/level1/entranceToLevel2.png')
+    controller.mouseAction(MouseActions.RIGHT, 'images/level1/entranceToLevel2.png')
     if controller.wait_for_image('images/fight/round.png', 5, 1):
         killSensorIfAttacked()
         enterSecondLevel()
 
 
 def enterThirdLevel():
-    controller.rightClick('images/level2/entranceToLevel3.png')
+    controller.mouseAction(MouseActions.RIGHT, 'images/level2/entranceToLevel3.png')
     if controller.wait_for_image('images/fight/round.png', 5, 1):
-        if config['selectTacticVia'] == 'keyboard':
-            controller.pressWithActiveWindow('2')
-        else:
-            controller.leftClick('images/fight/tacticTwo.png')
-        controller.pressWithActiveWindow('space')
-        finishing_combat()
-        controller.leftClick('images/fight/restIcon.png')
-        controller.pressWithActiveWindow('esc')
+        killSensorIfAttacked()
         enterThirdLevel()
     else:
-        controller.leftClick('images/fight/restIcon.png')
-        pyautogui.sleep(15)
+        combat.rest(15)
 
 
 def enterFourthLevel():
-    controller.rightClick('images/level3/entranceToLevel4.png')
+    controller.mouseAction(MouseActions.RIGHT, 'images/level3/entranceToLevel4.png')
     if controller.wait_for_image('images/fight/round.png', 5, 1):
         killSensorIfAttacked()
         enterFourthLevel()
 
 
 def killSensorIfAttacked():
-    if config['selectTacticVia'] == 'keyboard':
+    if config['takeActionVia'] == 'keyboard':
         controller.pressWithActiveWindow('2')
     else:
-        controller.leftClick('images/fight/tacticTwo.png')
+        controller.mouseAction(MouseActions.LEFT, 'images/fight/tacticTwo.png')
     controller.pressWithActiveWindow('space')
     finishing_combat()
-    controller.leftClick('images/fight/restIcon.png')
+    pyautogui.sleep(0.1)
     controller.pressWithActiveWindow('esc')
-    pyautogui.sleep(8)
+    combat.rest(8)
 
 
 def quitInstance():
-    controller.rightClick('images/level4/quit.png')
+    controller.mouseAction(MouseActions.RIGHT, 'images/level4/quit.png')
     pyautogui.sleep(5)
-    controller.leftClick('images/fight/restIcon.png')
-    pyautogui.sleep(15)
+    combat.rest(15)
 
 
 pyautogui.sleep(2)
@@ -85,13 +75,13 @@ def hunting_V2():
         enterEasyV2()
         combat.killMob('Sensor1', 20)
         enterSecondLevel()
-        combat.killMob('Boss1', 200)
+        combat.killMob('Boss1')
         combat.killMob('Sensor2', 20)
         enterThirdLevel()
-        combat.killMob('Boss2', 200)
+        combat.killMob('Boss2')
         combat.killMob('Sensor3', 20)
         enterFourthLevel()
-        combat.killMob('V2', 200)
+        combat.killMob('V2')
         quitInstance()
 
 

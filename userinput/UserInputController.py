@@ -8,7 +8,13 @@ import pygetwindow as gw
 pyautogui.FAILSAFE = False
 
 
-def findImagePosition(targetImage, maxAttempts, movementDuration=0.1):
+class MouseActions:
+    LEFT = pyautogui.leftClick
+    RIGHT = pyautogui.rightClick
+    HOLD_DOWN = pyautogui.mouseDown
+
+
+def findImagePosition(targetImage, maxAttempts):
     attempts = 1
     while attempts <= maxAttempts:
         screenshot = pyautogui.screenshot()
@@ -32,26 +38,11 @@ def findImagePosition(targetImage, maxAttempts, movementDuration=0.1):
             centerX = topLeft[0] + targetWidth // 2
             centerY = topLeft[1] + targetHeight // 2
             # Move the mouse to the center of the matched region
-            pyautogui.moveTo(centerX, centerY, movementDuration)
-            return True
+            return centerX, centerY
         attempts += 1
         print(f'{maxValue}')
-        if attempts % 10 == 1:
-            moveCharacter()
-        pyautogui.sleep(0.1)
     # Return False if the image is not found
-    return False
-
-
-def moveCharacter():
-    # Get the screen size
-    screen_width, screen_height = pyautogui.size()
-
-    # Calculate the center position
-    center_x = screen_width // 2
-    center_y = screen_height // 2
-    pyautogui.moveTo(center_x + screen_width * 0.03, center_y - screen_height * 0.05)
-    pyautogui.leftClick()
+    return None
 
 
 def wait_for_image(image_path, timeoutSeconds=120, intervalSeconds=1):
@@ -76,49 +67,40 @@ def wait_for_image(image_path, timeoutSeconds=120, intervalSeconds=1):
 
         if max_val >= threshold:
             return True
-
         time.sleep(intervalSeconds)
 
     print(f"Timeout: Image not found - {image_path}")
     return False
 
 
-def leftClick(targetPath, attempts=20):
-    targetImage = cv2.imread(targetPath)
-    wasFound = findImagePosition(targetImage, attempts)
-    if wasFound:
+def mouseAction(mouseActionType: MouseActions, targetImgPath, attempts=20, movementDuration=0.1):
+    targetImage = cv2.imread(targetImgPath)
+    foundCoordinates = findImagePosition(targetImage, attempts)
+    if foundCoordinates:
         activate_game_window()
-        pyautogui.leftClick()
+        pyautogui.moveTo(foundCoordinates[0], foundCoordinates[1], movementDuration)
+        if mouseActionType == MouseActions.LEFT:
+            pyautogui.mouseDown()
+            pyautogui.sleep(0.1)
+            pyautogui.mouseUp()
+        elif mouseActionType == MouseActions.RIGHT:
+            pyautogui.mouseDown(button='right')
+            pyautogui.sleep(0.1)
+            pyautogui.mouseUp(button='right')
+        elif mouseActionType == MouseActions.HOLD_DOWN:
+            pyautogui.mouseDown()
+            pyautogui.sleep(2)
+            pyautogui.mouseUp()
         return True
-    print(f'LEFT CLICK: Image not found - {targetPath}')
-    return False
-
-
-def rightClick(targetPath, attempts=20, movementDuration=0.1):
-    targetImage = cv2.imread(targetPath)
-    wasFound = findImagePosition(targetImage, attempts, movementDuration)
-    if wasFound:
-        pyautogui.rightClick()
-        return True
-    print(f'RIGHT CLICK: Image not found - {targetPath}')
-    return False
-
-
-def leftMouseDown(targetPath, attempts=20):
-    targetImage = cv2.imread(targetPath)
-    wasFound = findImagePosition(targetImage, attempts)
-    if wasFound:
-        pyautogui.mouseDown()
-        pyautogui.sleep(2)
-        pyautogui.mouseUp()
-        return True
-    print(f'LEFT MOUSE DOWN: Image not found - {targetPath}')
+    print(f'{mouseActionType}: Image not found - {targetImgPath}')
     return False
 
 
 def pressWithActiveWindow(key):
     activate_game_window()
-    pyautogui.press(key)
+    pyautogui.keyDown(key)
+    pyautogui.sleep(0.1)
+    pyautogui.keyUp(key)
 
 
 def activate_game_window():

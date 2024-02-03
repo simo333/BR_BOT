@@ -5,6 +5,7 @@ import pyautogui
 
 from dto.MobTacticDTO import MobTacticDTO
 from userinput import UserInputController
+from userinput.UserInputController import MouseActions
 
 controller = UserInputController
 
@@ -18,7 +19,7 @@ tacticDictionary = {
 
 def finishing_combat():
     """
-        Wait for the armor icon appears -> fight is over or clock icon -> new round has started;
+        Wait for the rest icon appears -> fight is over or clock icon -> new round has started;
         Save screenshot if specified in json;
         Press 'esc' to close fight summary
         """
@@ -35,20 +36,20 @@ class Combat:
         self.mobJson = mobTacticJson
         self.config = config
 
-    def killMob(self, mobName, attempts=10):
+    def killMob(self, mobName, attempts=200):
         print(f'Killing {mobName}')
         mobTactic = MobTacticDTO(**self.mobJson[mobName])
-        wasFound = controller.rightClick(mobTactic.imgPath, attempts)
+        wasFound = controller.mouseAction(MouseActions.RIGHT, mobTactic.imgPath, attempts)
         if wasFound:
             controller.wait_for_image('images/fight/round.png')
             self.proceed_with_combat(mobTactic)
             if mobTactic.saveSS:
                 saveDropSS(mobName)
+            pyautogui.sleep(0.5)
             controller.pressWithActiveWindow('esc')
             # If resting time is greater than 0, then rest for the given time in seconds
             if mobTactic.restingTime > 0:
-                controller.leftClick('images/fight/restIcon.png')
-                pyautogui.sleep(mobTactic.restingTime)
+                self.rest(mobTactic.restingTime)
             # Attack until the target is found
             if mobTactic.repeatAttack:
                 self.killMob(mobName, attempts)
@@ -66,10 +67,17 @@ class Combat:
         finishing_combat()
 
     def chooseTactic(self, tactic: int):
-        if self.config['selectTacticVia'] == 'keyboard':
+        if self.config['takeActionVia'] == 'keyboard':
             controller.pressWithActiveWindow(str(tactic))
         else:
-            controller.leftClick(tacticDictionary.get(tactic))
+            controller.mouseAction(MouseActions.LEFT, tacticDictionary.get(tactic))
+
+    def rest(self, restingTime):
+        if self.config['takeActionVia'] == 'keyboard':
+            controller.pressWithActiveWindow('r')
+        else:
+            controller.mouseAction(MouseActions.LEFT, 'images/fight/restIcon.png')
+        pyautogui.sleep(restingTime)
 
 
 def saveDropSS(mobName):
