@@ -45,7 +45,7 @@ def findImagePosition(targetImage, maxAttempts):
     return None
 
 
-def wait_for_image(image_path, timeoutSeconds=120, intervalSeconds=1):
+def wait_for_image(image_path, timeoutSeconds=120, intervalSeconds=0.1):
     start_time = time.time()
 
     # Load the template image
@@ -73,27 +73,36 @@ def wait_for_image(image_path, timeoutSeconds=120, intervalSeconds=1):
     return False
 
 
-def mouseAction(mouseActionType: MouseActions, targetImgPath, attempts=20, movementDuration=0.1):
-    targetImage = cv2.imread(targetImgPath)
-    foundCoordinates = findImagePosition(targetImage, attempts)
-    if foundCoordinates:
+def mouseAction(mouseActionType: MouseActions, target: str | tuple[int, int], attempts=20, movementDuration=0.1):
+    if type(target) == str:
+        targetImage = cv2.imread(target)
+        foundCoordinates = findImagePosition(targetImage, attempts)
+        if foundCoordinates:
+            activate_game_window()
+            takeMouseAction(foundCoordinates, mouseActionType, movementDuration)
+            return True
+    elif type(target == tuple[int, int]):
         activate_game_window()
-        pyautogui.moveTo(foundCoordinates[0], foundCoordinates[1], movementDuration)
-        if mouseActionType == MouseActions.LEFT:
-            pyautogui.mouseDown()
-            pyautogui.sleep(0.1)
-            pyautogui.mouseUp()
-        elif mouseActionType == MouseActions.RIGHT:
-            pyautogui.mouseDown(button='right')
-            pyautogui.sleep(0.1)
-            pyautogui.mouseUp(button='right')
-        elif mouseActionType == MouseActions.HOLD_DOWN:
-            pyautogui.mouseDown()
-            pyautogui.sleep(2)
-            pyautogui.mouseUp()
+        takeMouseAction(target, mouseActionType, movementDuration)
         return True
-    print(f'{mouseActionType}: Image not found - {targetImgPath}')
+    print(f'{mouseActionType}: Image not found - {target}')
     return False
+
+
+def takeMouseAction(foundCoordinates, mouseActionType, movementDuration):
+    pyautogui.moveTo(foundCoordinates[0], foundCoordinates[1], movementDuration)
+    if mouseActionType == MouseActions.LEFT:
+        pyautogui.mouseDown()
+        pyautogui.sleep(0.1)
+        pyautogui.mouseUp()
+    elif mouseActionType == MouseActions.RIGHT:
+        pyautogui.mouseDown(button='right')
+        pyautogui.sleep(0.1)
+        pyautogui.mouseUp(button='right')
+    elif mouseActionType == MouseActions.HOLD_DOWN:
+        pyautogui.mouseDown()
+        pyautogui.sleep(2)
+        pyautogui.mouseUp()
 
 
 def pressWithActiveWindow(key):
