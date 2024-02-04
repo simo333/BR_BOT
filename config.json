@@ -1,9 +1,15 @@
 {
-  "repeats" : 25,
-  "tacticSource" : "mobs/V2.json",
+  "repeats": 25,
+  "tacticSource": "mobs/V2.json",
   "hotkeys": {
     "startStop": "shift+alt+r",
     "pause": "shift+alt+p"
   },
-  "takeActionVia": "keyboard"
+  "takeActionVia": "keyboard",
+  "deathHandle": {
+    "withAssist": false,
+    "hpPotions": 10,
+    "manaPotions": 0,
+    "staminaPotions": 3
+  }
 }
