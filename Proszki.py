@@ -1,5 +1,5 @@
 import json
-
+import alarm.AlarmUtil
 import pyautogui
 
 from userinput import UserInputController
@@ -18,6 +18,7 @@ print("START")
 combat = Combat(mobData, config)
 for i in range(config['repeats']):
     combat.killMob('FireMob')
+    alarm.AlarmUtil.alarmChecker(config)
     if i % 4 == 0:
         combat.rest(8)
 

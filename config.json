@@ -1,10 +1,10 @@
 {
-  "repeats": 25,
+  "repeats": 30,
   "tacticSource": "mobs/V2.json",
-  "hotkeys": {
-    "startStop": "shift+alt+r",
-    "pause": "shift+alt+p"
-  },
+  "alarmWhenMsg": false,
+  "closeWhenMsg": false,
+  "alarmWhenError": false,
+  "alarmWhenFinishRepeats": false,
   "takeActionVia": "keyboard",
   "deathHandle": {
     "withAssist": false,

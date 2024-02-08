@@ -33,14 +33,13 @@ def findImagePosition(targetImage, maxAttempts):
             # Extract the coordinates of the top-left corner of the matched region
             topLeft = maxLocation
             # Get the dimensions of the template image
-            targetHeight, targetWidth = targetGray.shape[::-1]
+            targetWidth, targetHeight = targetGray.shape[::-1]
             # Calculate the center of the matched region
             centerX = topLeft[0] + targetWidth // 2
             centerY = topLeft[1] + targetHeight // 2
             # Move the mouse to the center of the matched region
             return centerX, centerY
         attempts += 1
-        print(f'{maxValue}')
     # Return False if the image is not found
     return None
 
@@ -112,6 +111,17 @@ def pressWithActiveWindow(key):
     pyautogui.keyUp(key)
 
 
+def check_if_target_on_list(img):
+    pyautogui.moveTo(pyautogui.size().width - 1, pyautogui.size().height * 0.1)
+    pressWithActiveWindow('n')
+    wasFound = wait_for_image(img)
+    pyautogui.sleep(0.1)
+    if wasFound:
+        pressWithActiveWindow('n')
+        return True
+    return False
+
+
 def activate_game_window():
     window_title_to_activate = "BrokenRanks"
     try:
@@ -121,4 +131,3 @@ def activate_game_window():
     except IndexError:
         print(f"Window with title '{window_title_to_activate}' not found.")
         return False
-

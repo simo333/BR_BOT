@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 
-import cv2
 import pyautogui
 
 from dto.MobTacticDTO import MobTacticDTO
@@ -24,29 +23,37 @@ potionsDictionary = {
 }
 
 
+class TargetAction:
+    KILL = 'images/fight/atkIcon.png'
+    JOIN = 'images/fight/joinTeamIcon.png'
+
+
 class Combat:
 
     def __init__(self, mobTacticJson, config):
         self.mobJson = mobTacticJson
         self.config = config
 
-    def killMob(self, mobName, attempts=200):
+    def killMob(self, mobName, attempts=200, isBoss=False):
         print(f'{datetime.now()}: Killing {mobName}')
         mobTactic = MobTacticDTO(**self.mobJson[mobName])
-        wasFound = controller.mouseAction(MouseActions.RIGHT, mobTactic.imgPath, attempts)
+        wasFound = targetInteraction(TargetAction.KILL, mobTactic.imgPath, attempts)
         if wasFound:
-            controller.wait_for_image('images/fight/round.png')
-            self.proceed_with_combat(mobName, mobTactic)
-            if mobTactic.saveSS:
-                saveSS(mobName)
-            pyautogui.sleep(0.5)
-            controller.pressWithActiveWindow('esc')
-            # If resting time is greater than 0, then rest for the given time in seconds
-            if mobTactic.restingTime > 0:
-                self.rest(mobTactic.restingTime)
-            # Attack until the target is found
+            if controller.wait_for_image('images/fight/round.png', 20):
+                self.proceed_with_combat(mobName, mobTactic)
+                if mobTactic.saveSS:
+                    saveSS(mobName)
+                pyautogui.sleep(0.5)
+                controller.pressWithActiveWindow('esc')
+                # If resting time is greater than 0, then rest for the given time in seconds
+                if mobTactic.restingTime > 0:
+                    self.rest(mobTactic.restingTime)
+                # Attack until the target is found
             if mobTactic.repeatAttack:
                 self.killMob(mobName, attempts)
+        else:
+            if isBoss:
+                self.killMob(mobName, attempts, True)
 
     def proceed_with_combat(self, mobName: str, mobTactic: MobTacticDTO):
         self.chooseTactic(mobTactic.tacticRound1)
@@ -74,13 +81,13 @@ class Combat:
         if controller.wait_for_image('images/fight/round.png', 1200):
             self.proceed_with_combat(mobName, mobTactic)
 
-    def proceed_with_combat_assist(self, mobName: str, mobTactic: MobTacticDTO):
+    def proceed_with_combat_assist(self, mobTactic: MobTacticDTO):
         self.chooseTactic(mobTactic.tacticRound1)
         controller.pressWithActiveWindow('space')
         self.chooseTactic(mobTactic.tacticRest)
-        self.finishing_combat_assist(mobName)
+        self.finishing_combat_assist()
 
-    def finishing_combat_assist(self, mobName):
+    def finishing_combat_assist(self):
         """
             Wait for the rest icon appears -> fight is over or clock icon -> new round has started;
             Save screenshot if specified in json;
@@ -121,11 +128,11 @@ class Combat:
             self.killMob(mobName)
             # If not then walk halfway of instance
             moveToInstanceHalfway()
-            controller.wait_for_image('images/fight/round.png', 5)
-            # Try to find img of mob that killed you again
-            self.killMob(mobName)
+            if not controller.wait_for_image('images/fight/round.png', 5):
+                # Try to find img of mob that killed you again
+                self.killMob(mobName)
         else:
-            # Wait for the other to finish combat and join your team
+            # As team leader wait for the other to finish combat and join your team
             # If not joined then move to halfway of the instance and wait again
             if not controller.wait_for_image('images/fight/twoPlayersInTeam.png', 60):
                 moveToInstanceHalfway()
@@ -167,15 +174,16 @@ def saveSS(mobName):
 
 
 def joinYourAssist():
+    controller.pressWithActiveWindow('esc')
+    targetInteraction(TargetAction.JOIN, 'images/fight/assistNick.png', 200)
+
+
+def targetInteraction(action: TargetAction, targetImg, attempts):
     pyautogui.moveTo(pyautogui.size().width - 1, pyautogui.size().height * 0.1)
     controller.pressWithActiveWindow('n')
-    pyautogui.sleep(0.5)
-
-    targetImage = cv2.imread('images/fight/assistNick.png')
-    position = controller.findImagePosition(targetImage, 20)
-    # Adjust found position - it returns little lower position
-    pyautogui.moveTo(position[0], position[1] - pyautogui.size().height * 0.01, 0.3)
-    pyautogui.leftClick()
-    pyautogui.sleep(0.5)
-    controller.mouseAction(MouseActions.LEFT, 'images/fight/joinTeamIcon.png')
+    pyautogui.sleep(0.3)
+    controller.mouseAction(MouseActions.LEFT, targetImg, attempts)
     controller.pressWithActiveWindow('n')
+    pyautogui.sleep(0.3)
+    wasFound = controller.mouseAction(MouseActions.LEFT, action.__str__(), movementDuration=0.1)
+    return wasFound

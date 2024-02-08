@@ -1,12 +1,9 @@
-
 from datetime import datetime
-
-import cv2
-
-import json
 
 import pyautogui
 
+import alarm.AlarmUtil
+import json
 from userinput import UserInputController
 from userinput.Combat import Combat
 from userinput.UserInputController import MouseActions
@@ -28,6 +25,8 @@ def enterEasyV2():
         pyautogui.moveTo(300, 300)
         enterEasyV2()
     controller.mouseAction(MouseActions.HOLD_DOWN, 'images/level0/easyV2Option.png')
+    if not controller.check_if_target_on_list('images/fight/czujkaOnN.png'):
+        enterEasyV2()
 
 
 def enterSecondLevel():
@@ -35,6 +34,9 @@ def enterSecondLevel():
     controller.mouseAction(MouseActions.RIGHT, 'images/level1/entranceToLevel2.png')
     if controller.wait_for_image('images/fight/round.png', 5):
         killSensorIfAttacked('Sensor1')
+        enterSecondLevel()
+        return
+    if not controller.check_if_target_on_list('images/fight/czujkaOnN.png'):
         enterSecondLevel()
 
 
@@ -44,8 +46,11 @@ def enterThirdLevel():
     if controller.wait_for_image('images/fight/round.png', 5):
         killSensorIfAttacked('Sensor2')
         enterThirdLevel()
-    else:
-        combat.rest(15)
+        return
+    if not controller.check_if_target_on_list('images/fight/czujkaOnN.png'):
+        enterThirdLevel()
+        return
+    combat.rest(15)
 
 
 def enterFourthLevel():
@@ -53,6 +58,8 @@ def enterFourthLevel():
     controller.mouseAction(MouseActions.RIGHT, 'images/level3/entranceToLevel4.png')
     if controller.wait_for_image('images/fight/round.png', 5):
         killSensorIfAttacked('Sensor3')
+        enterFourthLevel()
+    if not controller.check_if_target_on_list('images/fight/bossOnN.png'):
         enterFourthLevel()
 
 
@@ -71,6 +78,9 @@ def killSensorIfAttacked(mobName: str):
 def quitInstance():
     controller.mouseAction(MouseActions.RIGHT, 'images/level4/quit.png')
     pyautogui.sleep(5)
+    if not controller.wait_for_image('images/level0/entranceToInstance.png'):
+        quitInstance()
+        return
     combat.rest(15)
 
 
@@ -82,16 +92,29 @@ print("START")
 def hunting_V2():
     for i in range(config['repeats']):
         enterEasyV2()
+        alarm.AlarmUtil.alarmChecker(config)
         combat.killMob('Sensor1', 20)
+        alarm.AlarmUtil.alarmChecker(config)
         enterSecondLevel()
-        combat.killMob('Boss1')
+        alarm.AlarmUtil.alarmChecker(config)
+        combat.killMob('Boss1', True)
+        alarm.AlarmUtil.alarmChecker(config)
         combat.killMob('Sensor2', 20)
+        alarm.AlarmUtil.alarmChecker(config)
         enterThirdLevel()
-        combat.killMob('Boss2')
+        alarm.AlarmUtil.alarmChecker(config)
+        combat.killMob('Boss2', True)
+        alarm.AlarmUtil.alarmChecker(config)
         combat.killMob('Sensor3', 20)
+        alarm.AlarmUtil.alarmChecker(config)
         enterFourthLevel()
-        combat.killMob('V2')
+        alarm.AlarmUtil.alarmChecker(config)
+        combat.killMob('V2', True)
+        alarm.AlarmUtil.alarmChecker(config)
         quitInstance()
+        alarm.AlarmUtil.alarmChecker(config)
+        if i == config['repeats']:
+            alarm.AlarmUtil.alarmWhenFinishRepeats(config)
 
 
 hunting_V2()
