@@ -1,3 +1,4 @@
+import alarm.AlarmUtil
 import json
 
 import pyautogui
@@ -18,14 +19,25 @@ print("START")
 combat = Combat(mobData, config)
 for i in range(config['repeats']):
     combat.killMobAssist('Sensor1')
+    alarm.AlarmUtil.alarmChecker(config)
     combat.killMobAssist('Sensor1')
+    alarm.AlarmUtil.alarmChecker(config)
     combat.killMobAssist('Sensor1')
+    alarm.AlarmUtil.alarmChecker(config)
     combat.killMobAssist('Sensor1')
+    alarm.AlarmUtil.alarmChecker(config)
     combat.killMobAssist('Boss1')
+    alarm.AlarmUtil.alarmChecker(config)
     combat.killMobAssist('Sensor2')
+    alarm.AlarmUtil.alarmChecker(config)
     combat.killMobAssist('Sensor2')
+    alarm.AlarmUtil.alarmChecker(config)
     combat.killMobAssist('Boss2')
+    alarm.AlarmUtil.alarmChecker(config)
     combat.killMobAssist('Sensor3')
+    alarm.AlarmUtil.alarmChecker(config)
     combat.killMobAssist('Sensor3')
+    alarm.AlarmUtil.alarmChecker(config)
     combat.killMobAssist('V2')
+    alarm.AlarmUtil.alarmChecker(config)
     pyautogui.sleep(20)

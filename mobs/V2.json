@@ -1,6 +1,6 @@
 {
   "Sensor1": {
-    "imgPath": "images/level1/czujka1.png",
+    "imgPath": "images/fight/czujkaOnN.png",
     "tacticRound1": 2,
     "tacticRest": 2,
     "repeatAttack": true,
@@ -8,7 +8,7 @@
     "saveSS" : false
   },
   "Sensor2": {
-    "imgPath": "images/level2/czujka2.png",
+    "imgPath": "images/fight/czujkaOnN.png",
     "tacticRound1": 2,
     "tacticRest": 2,
     "repeatAttack": true,
@@ -16,7 +16,7 @@
     "saveSS" : false
   },
   "Sensor3": {
-    "imgPath": "images/level3/czujka3.png",
+    "imgPath": "images/fight/czujkaOnN.png",
     "tacticRound1": 2,
     "tacticRest": 2,
     "repeatAttack": true,
@@ -24,7 +24,7 @@
     "saveSS" : false
   },
   "Boss1": {
-    "imgPath": "images/level2/boss1.png",
+    "imgPath": "images/fight/bossOnN.png",
     "tacticRound1": 1,
     "tacticRest": 4,
     "repeatAttack": false,
@@ -32,7 +32,7 @@
     "saveSS" : false
   },
   "Boss2": {
-    "imgPath": "images/level3/boss2.png",
+    "imgPath": "images/fight/bossOnN.png",
     "tacticRound1": 1,
     "tacticRest": 4,
     "repeatAttack": false,
@@ -40,7 +40,7 @@
     "saveSS" : false
   },
   "V2": {
-    "imgPath": "images/level4/boss3.png",
+    "imgPath": "images/fight/bossOnN.png",
     "tacticRound1": 1,
     "tacticRest": 3,
     "repeatAttack": false,
