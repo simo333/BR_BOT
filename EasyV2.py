@@ -70,7 +70,7 @@ def killSensorIfAttacked(mobName: str):
         controller.mouseAction(MouseActions.LEFT, 'images/fight/tacticTwo.png')
     controller.pressWithActiveWindow('space')
     combat.finishing_combat(mobName)
-    pyautogui.sleep(0.1)
+    pyautogui.sleep(0.5)
     controller.pressWithActiveWindow('esc')
     combat.rest(8)
 
@@ -82,6 +82,14 @@ def quitInstance():
         quitInstance()
         return
     combat.rest(15)
+
+
+def quitFromSecondLevel():
+    controller.mouseAction(MouseActions.RIGHT, 'images/level4/quit.png')
+    pyautogui.sleep(3)
+    if not controller.wait_for_image('images/level0/entranceToInstance.png'):
+        quitInstance()
+        return
 
 
 pyautogui.sleep(2)
@@ -96,23 +104,26 @@ def hunting_V2():
         combat.killMob('Sensor1', 20)
         alarm.AlarmUtil.alarmChecker(config)
         enterSecondLevel()
-        alarm.AlarmUtil.alarmChecker(config)
-        combat.killMob('Boss1', True)
-        alarm.AlarmUtil.alarmChecker(config)
-        combat.killMob('Sensor2', 20)
-        alarm.AlarmUtil.alarmChecker(config)
-        enterThirdLevel()
-        alarm.AlarmUtil.alarmChecker(config)
-        combat.killMob('Boss2', True)
-        alarm.AlarmUtil.alarmChecker(config)
-        combat.killMob('Sensor3', 20)
-        alarm.AlarmUtil.alarmChecker(config)
-        enterFourthLevel()
-        alarm.AlarmUtil.alarmChecker(config)
-        combat.killMob('V2', True)
-        alarm.AlarmUtil.alarmChecker(config)
-        quitInstance()
-        alarm.AlarmUtil.alarmChecker(config)
+        if not config['sensorsOnly']:
+            alarm.AlarmUtil.alarmChecker(config)
+            combat.killMob('Boss1')
+            alarm.AlarmUtil.alarmChecker(config)
+            combat.killMob('Sensor2', 20)
+            alarm.AlarmUtil.alarmChecker(config)
+            enterThirdLevel()
+            alarm.AlarmUtil.alarmChecker(config)
+            combat.killMob('Boss2')
+            alarm.AlarmUtil.alarmChecker(config)
+            combat.killMob('Sensor3', 20)
+            alarm.AlarmUtil.alarmChecker(config)
+            enterFourthLevel()
+            alarm.AlarmUtil.alarmChecker(config)
+            combat.killMob('V2')
+            alarm.AlarmUtil.alarmChecker(config)
+            quitInstance()
+            alarm.AlarmUtil.alarmChecker(config)
+        else:
+            quitFromSecondLevel()
         if i == config['repeats']:
             alarm.AlarmUtil.alarmWhenFinishRepeats(config)
 

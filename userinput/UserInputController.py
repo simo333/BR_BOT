@@ -107,17 +107,17 @@ def takeMouseAction(foundCoordinates, mouseActionType, movementDuration):
 def pressWithActiveWindow(key):
     activate_game_window()
     pyautogui.keyDown(key)
-    pyautogui.sleep(0.1)
+    pyautogui.sleep(0.2)
     pyautogui.keyUp(key)
 
 
 def check_if_target_on_list(img):
     pyautogui.moveTo(pyautogui.size().width - 1, pyautogui.size().height * 0.1)
     pressWithActiveWindow('n')
-    wasFound = wait_for_image(img)
+    wasFound = wait_for_image(img, 10)
     pyautogui.sleep(0.1)
+    pressWithActiveWindow('n')
     if wasFound:
-        pressWithActiveWindow('n')
         return True
     return False
 
@@ -129,5 +129,4 @@ def activate_game_window():
         window.activate()
         return True
     except IndexError:
-        print(f"Window with title '{window_title_to_activate}' not found.")
-        return False
+        activate_game_window()

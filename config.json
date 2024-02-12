@@ -11,5 +11,6 @@
     "hpPotions": 10,
     "manaPotions": 0,
     "staminaPotions": 3
-  }
+  },
+  "sensorsOnly" : false
 }

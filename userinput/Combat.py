@@ -34,7 +34,7 @@ class Combat:
         self.mobJson = mobTacticJson
         self.config = config
 
-    def killMob(self, mobName, attempts=200, isBoss=False):
+    def killMob(self, mobName, attempts=200):
         print(f'{datetime.now()}: Killing {mobName}')
         mobTactic = MobTacticDTO(**self.mobJson[mobName])
         wasFound = targetInteraction(TargetAction.KILL, mobTactic.imgPath, attempts)
@@ -51,9 +51,6 @@ class Combat:
                 # Attack until the target is found
             if mobTactic.repeatAttack:
                 self.killMob(mobName, attempts)
-        else:
-            if isBoss:
-                self.killMob(mobName, attempts, True)
 
     def proceed_with_combat(self, mobName: str, mobTactic: MobTacticDTO):
         self.chooseTactic(mobTactic.tacticRound1)
