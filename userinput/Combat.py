@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
 
+import cv2
+import numpy as np
 import pyautogui
 
 from dto.MobTacticDTO import MobTacticDTO
@@ -67,10 +69,12 @@ class Combat:
             Save screenshot if specified in json;
             Press 'esc' to close fight summary
             """
+        mobTactic = MobTacticDTO(**self.mobJson[mobName])
         for i in range(1200):
             if controller.wait_for_image('images/fight/restIcon.png', 0.5, 0.1):
                 break
             elif controller.wait_for_image('images/fight/clockBar.png', 0.5, 0.1):
+                self.chooseTactic(mobTactic.tacticRest)
                 controller.pressWithActiveWindow('space')
             elif controller.wait_for_image('images/fight/deathCard.png', 0.3, 0.1):
                 self.handleDeath(mobName)
@@ -115,10 +119,10 @@ class Combat:
         pyautogui.sleep(restingTime)
 
     def handleDeath(self, mobName: str):
-        saveSS("DEAD")
         # Choose card
         controller.mouseAction(MouseActions.LEFT, 'images/fight/deathCard.png')
-        pyautogui.sleep(5)
+        saveSS("DEAD")
+        pyautogui.sleep(10)
         # Fill resources (hp, mana, stamina)
         self.fillResources()
         # Check if fighting alone or with someone
@@ -165,7 +169,7 @@ def saveSS(mobName):
     current_date = datetime.now()
     # Format the date as dd-mm-yyyy
     formatted_date_time = current_date.strftime('%d-%m-%YT%H-%M')
-    print(f'Saving screenshot of drop - {formatted_date_time}')
+    print(f'Saving screenshot - {formatted_date_time}')
     dropScreenshot = pyautogui.screenshot()
     # Create the directory if it doesn't exist
     directory_path = 'C:/brokenRanksHunts/'
@@ -187,3 +191,76 @@ def targetInteraction(action: TargetAction, targetImg, attempts):
     pyautogui.sleep(0.3)
     wasFound = controller.mouseAction(MouseActions.LEFT, action.__str__(), movementDuration=0.1)
     return wasFound
+
+
+
+def setDef(melee: int, dist: int, mental: int):
+
+    # Get the width and height of the screen
+    screen_width, screen_height = pyautogui.size()
+
+    # Calculate the height of the region to capture (10% of the screen height)
+    capture_height = int(0.1 * screen_height)
+
+    region = (0, screen_height - capture_height, int(screen_width), capture_height)
+
+    # Load the screenshot and the search image
+    screenshot = pyautogui.screenshot(region=region)
+    screenshotArray = np.array(screenshot)
+    search_image = cv2.imread("images/fight/clearDefIcon.png")
+
+    # Convert both images to grayscale
+    screenshot_gray = cv2.cvtColor(screenshotArray, cv2.COLOR_BGR2GRAY)
+    search_image_gray = cv2.cvtColor(search_image, cv2.COLOR_BGR2GRAY)
+
+    # Perform template matching
+    result = cv2.matchTemplate(screenshot_gray, search_image_gray, cv2.TM_CCOEFF_NORMED)
+
+    # Get the locations where the threshold is exceeded
+    threshold = 0.8
+    locations = np.where(result >= threshold)
+
+    # Extract the coordinates of the top-left corner of each match
+    match_locations = list(zip(*locations[::-1]))
+
+    # Filter out duplicate locations based on a minimum distance
+    unique_locations = find_unique_locations(match_locations)
+
+    # Adjust height (ss takes lowest 10% of the screen, so we must add the 90% of the screen height to get right coords)
+    adjusted_locations = [(location[0], location[1] + int(0.9 * screen_height)) for location in unique_locations]
+
+    reset_def(adjusted_locations)
+    set_def(adjusted_locations, 0, melee)
+    set_def(adjusted_locations, 1, dist)
+    set_def(adjusted_locations, 2, mental)
+
+
+'''Removes location duplicates - sometimes locations contains the same target that differs 1-2 pixel'''
+def find_unique_locations(locations, min_distance=10):
+    unique_locations = []
+    for loc in locations:
+        if all(np.linalg.norm(np.array(loc) - np.array(existing_loc)) > min_distance for existing_loc in unique_locations):
+            unique_locations.append(loc)
+    return unique_locations
+
+
+'''Resets current def in following sequence: mental, distance, melee'''
+def reset_def(locations: list):
+    locations.reverse()
+    for location in locations:
+        pyautogui.moveTo(location[0], location[1], 0.1)
+        pyautogui.leftClick()
+    locations.reverse()
+
+
+'''Sets def value equal to defPoints on zone (0-melee, 1-dist, 2-mental)'''
+def set_def(locations, zone: int, defPoints: int):
+    if defPoints != 0:
+        # defPoint is a representation of 50px on base monitor width resolution (2560) on current resolution
+        base_monitor_width = 2560
+        defPoint = int(50 * pyautogui.size().width / base_monitor_width)
+        defLocation = locations[zone]
+        pyautogui.moveTo(defLocation[0], defLocation[1], 0.1)
+        pyautogui.moveRel(defPoint * defPoints, 0, 0.1)
+        pyautogui.leftClick()
+
