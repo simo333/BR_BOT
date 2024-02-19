@@ -49,8 +49,10 @@ class Combat:
                 if mobTactic.restingTime > 0:
                     self.rest(mobTactic.restingTime)
                 # Attack until the target is found
-            if mobTactic.repeatAttack:
-                self.killMob(mobName, attempts)
+                if mobTactic.repeatAttack:
+                    self.killMob(mobName, attempts)
+            else:
+                self.killMob(mobName, attempts, isBoss)
         else:
             if isBoss:
                 self.killMob(mobName, attempts, True)
