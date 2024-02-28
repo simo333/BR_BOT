@@ -1,15 +1,16 @@
 {
-  "repeats": 30,
+  "repeats": 35,
   "tacticSource": "mobs/V2.json",
   "alarmWhenMsg": false,
   "closeWhenMsg": false,
   "alarmWhenError": false,
   "alarmWhenFinishRepeats": false,
   "takeActionVia": "keyboard",
+  "maxDeaths": 2,
   "deathHandle": {
     "withAssist": false,
-    "hpPotions": 10,
+    "hpPotions": 15,
     "manaPotions": 0,
-    "staminaPotions": 3
+    "staminaPotions": 5
   }
 }

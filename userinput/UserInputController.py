@@ -3,7 +3,7 @@ import time
 import cv2
 import numpy as np
 import pyautogui
-import pygetwindow as gw
+from pygetwindow import PyGetWindowException, getWindowsWithTitle
 
 pyautogui.FAILSAFE = False
 
@@ -125,9 +125,18 @@ def check_if_target_on_list(img):
 def activate_game_window():
     window_title_to_activate = "BrokenRanks"
     try:
-        window = gw.getWindowsWithTitle(window_title_to_activate)[0]
+        window = getWindowsWithTitle(window_title_to_activate)[0]
         window.activate()
         return True
     except IndexError:
-        print(f"Window with title '{window_title_to_activate}' not found.")
-        return False
+        window = getWindowsWithTitle(window_title_to_activate)[0]
+        window.minimize()
+        pyautogui.sleep(0.1)
+        window.maximize()
+        activate_game_window()
+    except PyGetWindowException:
+        window = getWindowsWithTitle(window_title_to_activate)[0]
+        window.minimize()
+        pyautogui.sleep(0.1)
+        window.maximize()
+        activate_game_window()

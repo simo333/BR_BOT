@@ -29,10 +29,12 @@ class TargetAction:
 
 
 class Combat:
+    ACTUAL_DEATHS = 0
 
     def __init__(self, mobTacticJson, config):
         self.mobJson = mobTacticJson
         self.config = config
+        self.MAX_DEATHS = config['maxDeaths']
 
     def killMob(self, mobName, attempts=200, isBoss=False):
         print(f'{datetime.now()}: Killing {mobName}')
@@ -59,62 +61,38 @@ class Combat:
         self.chooseTactic(mobTactic.tacticRound1)
         controller.pressWithActiveWindow('space')
         self.chooseTactic(mobTactic.tacticRest)
-        self.finishing_combat(mobName)
+        self.finishing_combat(mobName, True)
 
-    def finishing_combat(self, mobName):
+    def finishing_combat(self, mobName, isTeamLeader: bool):
+        mobTactic = MobTacticDTO(**self.mobJson[mobName])
+        fighting_with_assist = self.config['deathHandle']['withAssist']
         """
             Wait for the rest icon appears -> fight is over or clock icon -> new round has started;
             Save screenshot if specified in json;
             Press 'esc' to close fight summary
             """
+
         for i in range(1200):
             if controller.wait_for_image('images/fight/restIcon.png', 0.5, 0.1):
+                if fighting_with_assist:
+                    if isTeamLeader:
+                        if not controller.wait_for_image('images/fight/twoPlayersInTeam.png', 400):
+                            exit(1)
+                    else:
+                        controller.pressWithActiveWindow('esc')
+                        joinYourAssist()
                 break
             elif controller.wait_for_image('images/fight/clockBar.png', 0.5, 0.1):
+                self.chooseTactic(mobTactic.tacticRest)
                 controller.pressWithActiveWindow('space')
             elif controller.wait_for_image('images/fight/deathCard.png', 0.3, 0.1):
-                self.handleDeath(mobName)
-
-    def killMobAssist(self, mobName):
-        print(f'{datetime.now()}: Assisting to kill {mobName}')
-        mobTactic = MobTacticDTO(**self.mobJson[mobName])
-        if controller.wait_for_image('images/fight/round.png', 1200):
-            self.proceed_with_combat(mobName, mobTactic)
-
-    def proceed_with_combat_assist(self, mobTactic: MobTacticDTO):
-        self.chooseTactic(mobTactic.tacticRound1)
-        controller.pressWithActiveWindow('space')
-        self.chooseTactic(mobTactic.tacticRest)
-        self.finishing_combat_assist()
-
-    def finishing_combat_assist(self):
-        """
-            Wait for the rest icon appears -> fight is over or clock icon -> new round has started;
-            Save screenshot if specified in json;
-            Press 'esc' to close fight summary
-            """
-        for i in range(1200):
-            if controller.wait_for_image('images/fight/restIcon.png', 0.5, 0.1):
+                self.handleDeath(mobName, isTeamLeader)
                 break
-            elif controller.wait_for_image('images/fight/clockBar.png', 0.5, 0.1):
-                controller.pressWithActiveWindow('space')
-        if not controller.wait_for_image('images/fight/twoPlayersInTeam.png', 0.3, 0.1):
-            joinYourAssist()
 
-    def chooseTactic(self, tactic: int):
-        if self.config['takeActionVia'] == 'keyboard':
-            controller.pressWithActiveWindow(str(tactic))
-        else:
-            controller.mouseAction(MouseActions.LEFT, tacticDictionary.get(tactic))
-
-    def rest(self, restingTime):
-        if self.config['takeActionVia'] == 'keyboard':
-            controller.pressWithActiveWindow('r')
-        else:
-            controller.mouseAction(MouseActions.LEFT, 'images/fight/restIcon.png')
-        pyautogui.sleep(restingTime)
-
-    def handleDeath(self, mobName: str):
+    def handleDeath(self, mobName: str, isTeamLeader: bool):
+        Combat.ACTUAL_DEATHS += 1
+        if Combat.ACTUAL_DEATHS == self.MAX_DEATHS:
+            raise Exception('MAX AMOUNT OF DEATHS REACHED.')
         saveSS("DEAD")
         # Choose card
         controller.mouseAction(MouseActions.LEFT, 'images/fight/deathCard.png')
@@ -134,9 +112,38 @@ class Combat:
         else:
             # As team leader wait for the other to finish combat and join your team
             # If not joined then move to halfway of the instance and wait again
-            if not controller.wait_for_image('images/fight/twoPlayersInTeam.png', 60):
-                moveToInstanceHalfway()
-            controller.wait_for_image('images/fight/twoPlayersInTeam.png', 120)
+            if isTeamLeader:
+                if not controller.wait_for_image('images/fight/twoPlayersInTeam.png', 120):
+                    moveToInstanceHalfway()
+                controller.wait_for_image('images/fight/twoPlayersInTeam.png', 180)
+                return
+            else:
+                joinYourAssist()
+
+    def killMobAssist(self, mobName):
+        print(f'{datetime.now()}: Assisting to kill {mobName}')
+        mobTactic = MobTacticDTO(**self.mobJson[mobName])
+        if controller.wait_for_image('images/fight/round.png', 1200):
+            self.proceed_with_combat_assist(mobName, mobTactic)
+
+    def proceed_with_combat_assist(self, mobName, mobTactic: MobTacticDTO):
+        self.chooseTactic(mobTactic.tacticRound1)
+        controller.pressWithActiveWindow('space')
+        self.chooseTactic(mobTactic.tacticRest)
+        self.finishing_combat(mobName, False)
+
+    def chooseTactic(self, tactic: int):
+        if self.config['takeActionVia'] == 'keyboard':
+            controller.pressWithActiveWindow(str(tactic))
+        else:
+            controller.mouseAction(MouseActions.LEFT, tacticDictionary.get(tactic))
+
+    def rest(self, restingTime):
+        if self.config['takeActionVia'] == 'keyboard':
+            controller.pressWithActiveWindow('r')
+        else:
+            controller.mouseAction(MouseActions.LEFT, 'images/fight/restIcon.png')
+        pyautogui.sleep(restingTime)
 
     def fillResources(self):
         controller.pressWithActiveWindow('p')
@@ -174,8 +181,11 @@ def saveSS(mobName):
 
 
 def joinYourAssist():
-    controller.pressWithActiveWindow('esc')
-    targetInteraction(TargetAction.JOIN, 'images/fight/assistNick.png', 200)
+    if not targetInteraction(TargetAction.JOIN, 'images/fight/assistNick.png', 100):
+        moveToInstanceHalfway()
+        joinYourAssist()
+    if not controller.wait_for_image('images/fight/twoPlayersInTeam.png', 20):
+        joinYourAssist()
 
 
 def targetInteraction(action: TargetAction, targetImg, attempts):
