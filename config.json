@@ -6,7 +6,7 @@
   "alarmWhenError": false,
   "alarmWhenFinishRepeats": false,
   "takeActionVia": "keyboard",
-  "maxDeaths": 2,
+  "maxDeaths": 5,
   "deathHandle": {
     "withAssist": false,
     "hpPotions": 15,

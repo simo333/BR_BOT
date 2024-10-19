@@ -5,7 +5,7 @@ import pyautogui
 import alarm.AlarmUtil
 import json
 from userinput import UserInputController
-from userinput.Combat import Combat
+from userinput import Combat
 from userinput.UserInputController import MouseActions
 
 with open('config.json', 'r') as file:
@@ -15,7 +15,7 @@ with open(config['tacticSource'], 'r') as file:
     mobData = json.load(file)
 
 controller = UserInputController
-combat = Combat(mobData, config)
+combat = Combat.Combat(mobData, config)
 
 
 def enterEasyV2():
@@ -115,6 +115,7 @@ def hunting_V2():
         alarm.AlarmUtil.alarmChecker(config)
         if i == config['repeats']:
             alarm.AlarmUtil.alarmWhenFinishRepeats(config)
+        Combat.checkIfBagIsAlmostFull()
 
 
 hunting_V2()

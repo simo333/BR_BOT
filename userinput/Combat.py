@@ -8,6 +8,7 @@ from userinput import UserInputController
 from userinput.UserInputController import MouseActions
 
 controller = UserInputController
+trash_images_dir = 'images/trashItems'
 
 tacticDictionary = {
     1: "images/fight/tacticOne.png",
@@ -36,60 +37,48 @@ class Combat:
         self.config = config
         self.MAX_DEATHS = config['maxDeaths']
 
-    def killMob(self, mobName, attempts=200, isBoss=False):
+    def killMob(self, mobName, attempts=20, isBoss=False, afterDeath=False):
         print(f'{datetime.now()}: Killing {mobName}')
         mobTactic = MobTacticDTO(**self.mobJson[mobName])
         wasFound = targetInteraction(TargetAction.KILL, mobTactic.imgPath, attempts)
         if wasFound:
             if controller.wait_for_image('images/fight/round.png', 20):
-                self.proceed_with_combat(mobName, mobTactic)
+                self.proceed_with_combat(mobName, mobTactic, isBoss)
                 if mobTactic.saveSS:
                     saveSS(mobName)
-                pyautogui.sleep(0.5)
-                controller.pressWithActiveWindow('esc')
                 # If resting time is greater than 0, then rest for the given time in seconds
                 if mobTactic.restingTime > 0:
                     self.rest(mobTactic.restingTime)
-                # Attack until the target is found
+                if not afterDeath:
+                    controller.pressWithActiveWindow('esc')
+            # Attack until the target is found
             if mobTactic.repeatAttack:
-                self.killMob(mobName, attempts)
-        else:
-            if isBoss:
-                self.killMob(mobName, attempts, True)
+                self.killMob(mobName, attempts, isBoss, False)
 
-    def proceed_with_combat(self, mobName: str, mobTactic: MobTacticDTO):
+    def proceed_with_combat(self, mobName: str, mobTactic: MobTacticDTO, isBoss: bool):
         self.chooseTactic(mobTactic.tacticRound1)
         controller.pressWithActiveWindow('space')
         self.chooseTactic(mobTactic.tacticRest)
-        self.finishing_combat(mobName, True)
+        self.finishing_combat(mobName, isBoss)
 
-    def finishing_combat(self, mobName, isTeamLeader: bool):
+    def finishing_combat(self, mobName, isBoss: bool):
         mobTactic = MobTacticDTO(**self.mobJson[mobName])
-        fighting_with_assist = self.config['deathHandle']['withAssist']
         """
             Wait for the rest icon appears -> fight is over or clock icon -> new round has started;
             Save screenshot if specified in json;
             Press 'esc' to close fight summary
             """
-
         for i in range(1200):
             if controller.wait_for_image('images/fight/restIcon.png', 0.5, 0.1):
-                if fighting_with_assist:
-                    if isTeamLeader:
-                        if not controller.wait_for_image('images/fight/twoPlayersInTeam.png', 400):
-                            exit(1)
-                    else:
-                        controller.pressWithActiveWindow('esc')
-                        joinYourAssist()
                 break
             elif controller.wait_for_image('images/fight/clockBar.png', 0.5, 0.1):
                 self.chooseTactic(mobTactic.tacticRest)
                 controller.pressWithActiveWindow('space')
             elif controller.wait_for_image('images/fight/deathCard.png', 0.3, 0.1):
-                self.handleDeath(mobName, isTeamLeader)
+                self.handleDeath(mobName, isBoss)
                 break
 
-    def handleDeath(self, mobName: str, isTeamLeader: bool):
+    def handleDeath(self, mobName: str, isBoss: bool):
         Combat.ACTUAL_DEATHS += 1
         if Combat.ACTUAL_DEATHS == self.MAX_DEATHS:
             raise Exception('MAX AMOUNT OF DEATHS REACHED.')
@@ -99,38 +88,8 @@ class Combat:
         pyautogui.sleep(5)
         # Fill resources (hp, mana, stamina)
         self.fillResources()
-        # Check if fighting alone or with someone
-        fighting_with_assist = self.config['deathHandle']['withAssist']
-        if not fighting_with_assist:
-            # Try to find img of mob that killed you
-            self.killMob(mobName)
-            # If not then walk halfway of instance
-            moveToInstanceHalfway()
-            if not controller.wait_for_image('images/fight/round.png', 5):
-                # Try to find img of mob that killed you again
-                self.killMob(mobName)
-        else:
-            # As team leader wait for the other to finish combat and join your team
-            # If not joined then move to halfway of the instance and wait again
-            if isTeamLeader:
-                if not controller.wait_for_image('images/fight/twoPlayersInTeam.png', 120):
-                    moveToInstanceHalfway()
-                controller.wait_for_image('images/fight/twoPlayersInTeam.png', 180)
-                return
-            else:
-                joinYourAssist()
-
-    def killMobAssist(self, mobName):
-        print(f'{datetime.now()}: Assisting to kill {mobName}')
-        mobTactic = MobTacticDTO(**self.mobJson[mobName])
-        if controller.wait_for_image('images/fight/round.png', 1200):
-            self.proceed_with_combat_assist(mobName, mobTactic)
-
-    def proceed_with_combat_assist(self, mobName, mobTactic: MobTacticDTO):
-        self.chooseTactic(mobTactic.tacticRound1)
-        controller.pressWithActiveWindow('space')
-        self.chooseTactic(mobTactic.tacticRest)
-        self.finishing_combat(mobName, False)
+        # Try to find img of mob that killed you
+        self.killMob(mobName, 20, isBoss, True)
 
     def chooseTactic(self, tactic: int):
         if self.config['takeActionVia'] == 'keyboard':
@@ -160,13 +119,6 @@ class Combat:
             pyautogui.sleep(1)
 
 
-def moveToInstanceHalfway():
-    screen_size = pyautogui.size()
-    position_x = int(screen_size.width * 0.74)
-    position_y = int(screen_size.height * 0.264)
-    controller.mouseAction(MouseActions.LEFT, (position_x, position_y))
-
-
 def saveSS(mobName):
     # Get the current date
     current_date = datetime.now()
@@ -180,12 +132,32 @@ def saveSS(mobName):
     dropScreenshot.save(f'C:/brokenRanksHunts/{mobName}_{formatted_date_time}.png')
 
 
-def joinYourAssist():
-    if not targetInteraction(TargetAction.JOIN, 'images/fight/assistNick.png', 100):
-        moveToInstanceHalfway()
-        joinYourAssist()
-    if not controller.wait_for_image('images/fight/twoPlayersInTeam.png', 20):
-        joinYourAssist()
+""" Scenario:
+Check if almost full icon is found
+No: omit function / Yes: go to weapon section in bag
+Check 4 pages of weapons as follows:
+Collect all .png files in itemTrash folder and iterate through them
+Iterate until any of items was found
+If not found -> change page (or finish)
+If found -> iterate all the items once again (after throwing later items the ones that were iterated bedore may appear on actual page)"""
+def checkIfBagIsAlmostFull():
+    isAlmostFullIcon = controller.wait_for_image('images/others/almostFullBagIcon.png', 3, 1)
+    if isAlmostFullIcon:
+        controller.pressWithActiveWindow('e')
+        pyautogui.sleep(0.5)
+        controller.mouseAction(MouseActions.LEFT, 'images/others/weaponSectionIcon.png', 2)
+        file_list = [os.path.join(trash_images_dir, name) for name in os.listdir(trash_images_dir) if os.path.isfile(
+            os.path.join(trash_images_dir, name))]  # Find all files in trashItem folder and return list with full paths
+
+        for i in range(4):
+            foundAnyItem = True
+            while foundAnyItem:
+                foundAnyItem = False
+                for full_path in file_list:
+                    wasFound = controller.dragAndDrop(full_path, 'images/fight/restIcon.png')
+                    if wasFound:
+                        foundAnyItem = True
+            controller.mouseAction(MouseActions.LEFT, 'images/others/nextPageIcon.png')
 
 
 def targetInteraction(action: TargetAction, targetImg, attempts):
