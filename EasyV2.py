@@ -32,47 +32,29 @@ def enterEasyV2():
 def enterSecondLevel():
     print(f'{datetime.now()}: Entering second instance')
     controller.mouseAction(MouseActions.RIGHT, 'images/level1/entranceToLevel2.png')
-    if controller.wait_for_image('images/fight/round.png', 5):
-        killSensorIfAttacked('Sensor1')
-        enterSecondLevel()
+    if controller.wait_for_image('images/fight/bossOnN.png'):
         return
-    if not controller.check_if_target_on_list('images/fight/czujkaOnN.png'):
+    else:
         enterSecondLevel()
 
 
 def enterThirdLevel():
     print(f'{datetime.now()}: Entering third instance')
     controller.mouseAction(MouseActions.RIGHT, 'images/level2/entranceToLevel3.png')
-    if controller.wait_for_image('images/fight/round.png', 5):
-        killSensorIfAttacked('Sensor2')
-        enterThirdLevel()
+    if controller.wait_for_image('images/fight/bossOnN.png'):
+        combat.rest(config['restingTimeAfter2ndInstance'])
         return
-    if not controller.check_if_target_on_list('images/fight/czujkaOnN.png'):
+    else:
         enterThirdLevel()
-        return
-    combat.rest(15)
 
 
 def enterFourthLevel():
     print(f'{datetime.now()}: Entering fourth instance')
     controller.mouseAction(MouseActions.RIGHT, 'images/level3/entranceToLevel4.png')
-    if controller.wait_for_image('images/fight/round.png', 5):
-        killSensorIfAttacked('Sensor3')
-        enterFourthLevel()
-    if not controller.check_if_target_on_list('images/fight/bossOnN.png'):
-        enterFourthLevel()
-
-
-def killSensorIfAttacked(mobName: str):
-    if config['takeActionVia'] == 'keyboard':
-        controller.pressWithActiveWindow('2')
+    if controller.wait_for_image('images/fight/bossOnN.png'):
+        return
     else:
-        controller.mouseAction(MouseActions.LEFT, 'images/fight/tacticTwo.png')
-    controller.pressWithActiveWindow('space')
-    combat.finishing_combat(mobName)
-    pyautogui.sleep(0.1)
-    controller.pressWithActiveWindow('esc')
-    combat.rest(8)
+        enterFourthLevel()
 
 
 def quitInstance():
@@ -81,7 +63,7 @@ def quitInstance():
     if not controller.wait_for_image('images/level0/entranceToInstance.png'):
         quitInstance()
         return
-    combat.rest(15)
+    combat.rest(config['restingTimeAfterFinalBoss'])
 
 
 pyautogui.sleep(2)
@@ -90,6 +72,8 @@ print("START")
 
 # V2 FLOW
 def hunting_V2():
+    pyautogui.moveTo(pyautogui.size().width - 1, pyautogui.size().height * 0.1)  #move mouse to right top area
+    controller.pressWithActiveWindow('n')  # show mob list
     for i in range(config['repeats']):
         enterEasyV2()
         alarm.AlarmUtil.alarmChecker(config)

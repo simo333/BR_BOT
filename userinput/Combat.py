@@ -10,13 +10,6 @@ from userinput.UserInputController import MouseActions
 controller = UserInputController
 trash_images_dir = 'images/trashItems'
 
-tacticDictionary = {
-    1: "images/fight/tacticOne.png",
-    2: "images/fight/tacticTwo.png",
-    3: "images/fight/tacticThree.png",
-    4: "images/fight/tacticFour.png"
-}
-
 potionsDictionary = {
     "hpPotions": "images/fight/healthPotion.png",
     "manaPotions": "images/fight/manaPotion.png",
@@ -37,12 +30,12 @@ class Combat:
         self.config = config
         self.MAX_DEATHS = config['maxDeaths']
 
-    def killMob(self, mobName, attempts=20, isBoss=False, afterDeath=False):
+    def killMob(self, mobName, attempts=10, isBoss=False, afterDeath=False):
         print(f'{datetime.now()}: Killing {mobName}')
         mobTactic = MobTacticDTO(**self.mobJson[mobName])
         wasFound = targetInteraction(TargetAction.KILL, mobTactic.imgPath, attempts)
         if wasFound:
-            if controller.wait_for_image('images/fight/round.png', 20):
+            if controller.wait_for_image('images/fight/round.png'):
                 self.proceed_with_combat(mobName, mobTactic, isBoss)
                 if mobTactic.saveSS:
                     saveSS(mobName)
@@ -51,6 +44,10 @@ class Combat:
                     self.rest(mobTactic.restingTime)
                 if not afterDeath:
                     controller.pressWithActiveWindow('esc')
+            else:
+                # wasFound was true, so it means that the mob is visible and probably lag/freeze stopped the bot
+                # so try killing the mob once again
+                self.killMob(mobName, attempts, isBoss, afterDeath)
             # Attack until the target is found
             if mobTactic.repeatAttack:
                 self.killMob(mobName, attempts, isBoss, False)
@@ -92,16 +89,11 @@ class Combat:
         self.killMob(mobName, 20, isBoss, True)
 
     def chooseTactic(self, tactic: int):
-        if self.config['takeActionVia'] == 'keyboard':
-            controller.pressWithActiveWindow(str(tactic))
-        else:
-            controller.mouseAction(MouseActions.LEFT, tacticDictionary.get(tactic))
+        controller.pressWithActiveWindow(str(tactic))
+
 
     def rest(self, restingTime):
-        if self.config['takeActionVia'] == 'keyboard':
-            controller.pressWithActiveWindow('r')
-        else:
-            controller.mouseAction(MouseActions.LEFT, 'images/fight/restIcon.png')
+        controller.pressWithActiveWindow('r')
         pyautogui.sleep(restingTime)
 
     def fillResources(self):
@@ -149,7 +141,7 @@ def checkIfBagIsAlmostFull():
         file_list = [os.path.join(trash_images_dir, name) for name in os.listdir(trash_images_dir) if os.path.isfile(
             os.path.join(trash_images_dir, name))]  # Find all files in trashItem folder and return list with full paths
 
-        for i in range(4):
+        for i in range(4):  # check 4 pages if there are items to be thrown
             foundAnyItem = True
             while foundAnyItem:
                 foundAnyItem = False
@@ -158,14 +150,13 @@ def checkIfBagIsAlmostFull():
                     if wasFound:
                         foundAnyItem = True
             controller.mouseAction(MouseActions.LEFT, 'images/others/nextPageIcon.png')
+        controller.pressWithActiveWindow('e')
 
 
 def targetInteraction(action: TargetAction, targetImg, attempts):
-    pyautogui.moveTo(pyautogui.size().width - 1, pyautogui.size().height * 0.1)
-    controller.pressWithActiveWindow('n')
-    pyautogui.sleep(0.3)
-    controller.mouseAction(MouseActions.LEFT, targetImg, attempts)
-    controller.pressWithActiveWindow('n')
-    pyautogui.sleep(0.3)
-    wasFound = controller.mouseAction(MouseActions.LEFT, action.__str__(), movementDuration=0.1)
-    return wasFound
+    wasMobFound = controller.mouseAction(MouseActions.LEFT, targetImg, attempts)
+    if wasMobFound:
+        wasActionIconFound = controller.mouseAction(MouseActions.LEFT, action.__str__(), movementDuration=0.1)
+        if not wasActionIconFound:
+            targetInteraction(action, targetImg, attempts)  # if mob was found but icon was not found then retry
+    return wasMobFound

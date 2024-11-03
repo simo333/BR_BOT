@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 import cv2
 import numpy as np
@@ -22,10 +23,10 @@ def findImagePosition(targetImage, maxAttempts):
     while attempts <= maxAttempts:
         screenshot = pyautogui.screenshot()
         screenShotArray = np.array(screenshot)
-        ssGray = cv2.cvtColor(screenShotArray, cv2.COLOR_BGR2GRAY)
-        targetGray = cv2.cvtColor(targetImage, cv2.COLOR_BGR2GRAY)
+        # ssGray = cv2.cvtColor(screenShotArray, cv2.COLOR_BGR2GRAY)
+        # targetGray = cv2.cvtColor(targetImage, cv2.COLOR_BGR2GRAY)
         # Perform matching
-        result = cv2.matchTemplate(ssGray, targetGray, cv2.TM_CCOEFF_NORMED)
+        result = cv2.matchTemplate(screenShotArray, targetImage, cv2.TM_CCOEFF_NORMED)
         # Get the location with the highest correlation
         minValue, maxValue, minLocation, maxLocation = cv2.minMaxLoc(result)
         # Set a threshold for correlation value (adjust as needed)
@@ -36,7 +37,7 @@ def findImagePosition(targetImage, maxAttempts):
             # Extract the coordinates of the top-left corner of the matched region
             topLeft = maxLocation
             # Get the dimensions of the template image
-            targetWidth, targetHeight = targetGray.shape[::-1]
+            targetWidth, targetHeight = targetImage.shape[1], targetImage.shape[0]
             # Calculate the center of the matched region
             centerX = topLeft[0] + targetWidth // 2
             centerY = topLeft[1] + targetHeight // 2
@@ -47,21 +48,21 @@ def findImagePosition(targetImage, maxAttempts):
     return None
 
 
-def wait_for_image(image_path, timeoutSeconds=30, intervalSeconds=0.1):
+def wait_for_image(image_path, timeoutSeconds=20, intervalSeconds=0.1):
     start_time = time.time()
 
     # Load the template image
     template_image = cv2.imread(image_path)
-    template_gray = cv2.cvtColor(template_image, cv2.COLOR_BGR2GRAY)
+    # template_gray = cv2.cvtColor(template_image, cv2.COLOR_BGR2GRAY)
 
     while time.time() - start_time < timeoutSeconds:
         # Take a screenshot
         screenshot = pyautogui.screenshot()
         screenshot_np = np.array(screenshot)
-        screenshot_gray = cv2.cvtColor(screenshot_np, cv2.COLOR_BGR2GRAY)
+        # screenshot_gray = cv2.cvtColor(screenshot_np, cv2.COLOR_BGR2GRAY)
 
         # Perform template matching
-        result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+        result = cv2.matchTemplate(screenshot_np, template_image, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
 
         # Adjust the threshold as needed
@@ -71,7 +72,7 @@ def wait_for_image(image_path, timeoutSeconds=30, intervalSeconds=0.1):
             return True
         time.sleep(intervalSeconds)
 
-    print(f"Timeout: Image not found - {image_path}")
+    print(f"{datetime.now()}: Timeout: Image not found - {image_path}")
     return False
 
 
@@ -87,7 +88,7 @@ def mouseAction(mouseActionType: MouseActions, target: str | tuple[int, int], at
         activate_game_window()
         takeMouseAction(mouseActionType, target, movementDuration, dragAndDropFlag)
         return True
-    print(f'{mouseActionType}: Image not found - {target}')
+    print(f'{datetime.now()}: {mouseActionType}: Image not found - {target}')
     return False
 
 
@@ -124,9 +125,9 @@ def dragAndDrop(targetDrag, targetDrop):
             mouseAction(MouseActions.DROP, dropPosition, 1, 0.1, True)
             mouseAction(MouseActions.LEFT, "images/others/confirmButton.png", 1)
             return True
-        print(f'DROP MOUSE: Image not found - {targetDrop}')
+        print(f'{datetime.now()}: DROP MOUSE: Image not found - {targetDrop}')
         return False
-    print(f'DRAG MOUSE: Image not found - {targetDrag}')
+    print(f'{datetime.now()}: DRAG MOUSE: Image not found - {targetDrag}')
     return False
 
 
@@ -138,12 +139,8 @@ def pressWithActiveWindow(key):
 
 
 def check_if_target_on_list(img):
-    pyautogui.moveTo(pyautogui.size().width - 1, pyautogui.size().height * 0.1)
-    pressWithActiveWindow('n')
-    wasFound = wait_for_image(img)
-    pyautogui.sleep(0.1)
+    wasFound = wait_for_image(img, 3)
     if wasFound:
-        pressWithActiveWindow('n')
         return True
     return False
 

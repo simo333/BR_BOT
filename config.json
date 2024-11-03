@@ -5,7 +5,8 @@
   "closeWhenMsg": false,
   "alarmWhenError": false,
   "alarmWhenFinishRepeats": false,
-  "takeActionVia": "keyboard",
+  "restingTimeAfter2ndInstance": 15,
+  "restingTimeAfterFinalBoss": 15,
   "maxDeaths": 5,
   "deathHandle": {
     "withAssist": false,
