@@ -122,7 +122,7 @@ def dragAndDrop(targetDrag, targetDrop):
         dropPosition = findImagePosition(targetDropImage, 1)
         if dropPosition:
             dropPosition = (dropPosition[0], dropPosition[1] - pyautogui.size().height * 0.05)  # move a little above rest icon
-            mouseAction(MouseActions.DROP, dropPosition, 1, 0.1, True)
+            mouseAction(MouseActions.DROP, dropPosition, 1, 0.5, True)
             mouseAction(MouseActions.LEFT, "images/others/confirmButton.png", 1)
             return True
         print(f'{datetime.now()}: DROP MOUSE: Image not found - {targetDrop}')
