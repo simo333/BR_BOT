@@ -23,8 +23,7 @@ def findImagePosition(targetImage, maxAttempts):
     while attempts <= maxAttempts:
         screenshot = pyautogui.screenshot()
         screenShotArray = np.array(screenshot)
-        # ssGray = cv2.cvtColor(screenShotArray, cv2.COLOR_BGR2GRAY)
-        # targetGray = cv2.cvtColor(targetImage, cv2.COLOR_BGR2GRAY)
+        screenShotArray = cv2.cvtColor(screenShotArray, cv2.COLOR_RGB2BGR)  # Change from RGB to BGR colors
         # Perform matching
         result = cv2.matchTemplate(screenShotArray, targetImage, cv2.TM_CCOEFF_NORMED)
         # Get the location with the highest correlation
@@ -58,11 +57,11 @@ def wait_for_image(image_path, timeoutSeconds=20, intervalSeconds=0.1):
     while time.time() - start_time < timeoutSeconds:
         # Take a screenshot
         screenshot = pyautogui.screenshot()
-        screenshot_np = np.array(screenshot)
-        # screenshot_gray = cv2.cvtColor(screenshot_np, cv2.COLOR_BGR2GRAY)
+        screenShotArray = np.array(screenshot)
+        screenShotArray = cv2.cvtColor(screenShotArray, cv2.COLOR_RGB2BGR)  # Change from RGB to BGR colors
 
         # Perform template matching
-        result = cv2.matchTemplate(screenshot_np, template_image, cv2.TM_CCOEFF_NORMED)
+        result = cv2.matchTemplate(screenShotArray, template_image, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
 
         # Adjust the threshold as needed
@@ -122,7 +121,7 @@ def dragAndDrop(targetDrag, targetDrop):
         dropPosition = findImagePosition(targetDropImage, 1)
         if dropPosition:
             dropPosition = (dropPosition[0], dropPosition[1] - pyautogui.size().height * 0.05)  # move a little above rest icon
-            mouseAction(MouseActions.DROP, dropPosition, 1, 0.5, True)
+            mouseAction(MouseActions.DROP, dropPosition, 1, 0.3, True)
             mouseAction(MouseActions.LEFT, "images/others/confirmButton.png", 1)
             return True
         print(f'{datetime.now()}: DROP MOUSE: Image not found - {targetDrop}')

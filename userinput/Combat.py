@@ -43,6 +43,8 @@ class Combat:
                 if mobTactic.restingTime > 0:
                     self.rest(mobTactic.restingTime)
                 if not afterDeath:
+                    if mobTactic.restingTime == 0:  # workaround - when too fast then ESC is not working
+                        pyautogui.sleep(0.5)
                     controller.pressWithActiveWindow('esc')
             else:
                 # wasFound was true, so it means that the mob is visible and probably lag/freeze stopped the bot
@@ -82,7 +84,7 @@ class Combat:
         saveSS("DEAD")
         # Choose card
         controller.mouseAction(MouseActions.LEFT, 'images/fight/deathCard.png')
-        pyautogui.sleep(5)
+        controller.wait_for_image('images/fight/restIcon.png', 15, 0.2)
         # Fill resources (hp, mana, stamina)
         self.fillResources()
         # Try to find img of mob that killed you
